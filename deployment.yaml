@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.21
+          ports:
+            - containerPort: 80
+
+          # Resource requests & limits (required for HPA to work)
+          resources:
+            requests:
+              cpu: "100m"       # 0.1 vCPU — minimum guaranteed
+              memory: "128Mi"   # 128 MB — minimum guaranteed
+            limits:
+              cpu: "250m"       # 0.25 vCPU — hard cap
+              memory: "256Mi"   # 256 MB — hard cap
+
+          # Inject all ConfigMap keys as environment variables
+          envFrom:
+            - configMapRef:
+                name: app-config
+
+          # Secret still mapped explicitly
+          env:
+            - name: ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: username
+
+            - name: ADMIN_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: password
+
+          # Readiness: when is the pod ready to serve traffic?
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10   # wait 10s before first check
+            periodSeconds: 5
+            failureThreshold: 3
+
+          # Liveness: is the pod still alive? (must be >= readiness delay)
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 15   # fixed: was 5, must be >= readiness (10)
+            periodSeconds: 10
+            failureThreshold: 2
