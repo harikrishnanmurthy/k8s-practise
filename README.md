@@ -1,14 +1,23 @@
-Repo for practicing k8s concepts for beginners
+# Kubernetes Practice Repo (Beginner-Friendly)
 
-Prerequisites:
+This repository is intended for practicing **Kubernetes (k8s) concepts** in a simple, beginner-friendly way.
 
-Install docker
-Install minikube and config it to use docker
-Checkout the repo
-Run the config/yaml files using kubectl apply cmd in the following order:
+---
 
-configmap
-secret
-deployment
-services
-hpa
+## 🚀 Prerequisites
+
+Make sure you have the following installed and configured:
+
+- Docker  
+- Minikube (configured to use Docker as the driver)  
+- kubectl  
+
+---
+
+## 📦 Setup Instructions
+
+### 1. Clone the repository
+
+```bash
+git clone <your-repo-url>
+cd <repo-folder>
