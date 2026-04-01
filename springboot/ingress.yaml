@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: myapp.local                 # the hostname we'll use in the browser
+      http:
+        paths:
+          - path: /hello
+            pathType: Prefix
+            backend:
+              service:
+                name: spring-service       # your existing NodePort service
+                port:
+                  number: 80

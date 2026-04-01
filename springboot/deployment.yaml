@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: spring
+  template:
+    metadata:
+      labels:
+        app: spring
+    spec:
+      containers:
+        - name: spring-hello
+          image: spring-hello:latest
+          imagePullPolicy: Never        # use local image, don't pull from registry
+          ports:
+            - containerPort: 8080
+
+          # Resource requests & limits (required for HPA to work)
+          resources:
+            requests:
+              cpu: "100m"       # 0.1 vCPU — minimum guaranteed
+              memory: "256Mi"   # Spring Boot needs more memory than nginx
+            limits:
+              cpu: "500m"       # 0.5 vCPU — hard cap
+              memory: "512Mi"   # 512 MB — hard cap
+
+          # Inject all ConfigMap keys as environment variables
+          envFrom:
+            - configMapRef:
+                name: app-config
+
+          # Secret mapped explicitly
+          env:
+            - name: ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: username
+
+            - name: ADMIN_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: password
+
+          # Readiness: when is the pod ready to serve traffic?
+          readinessProbe:
+            httpGet:
+              path: /hello
+              port: 8080
+            initialDelaySeconds: 30     # Spring Boot takes longer to start than nginx
+            periodSeconds: 5
+            failureThreshold: 3
+
+          # Liveness: is the pod still alive?
+          livenessProbe:
+            httpGet:
+              path: /hello
+              port: 8080
+            initialDelaySeconds: 45     # always >= readiness delay
+            periodSeconds: 10
+            failureThreshold: 2

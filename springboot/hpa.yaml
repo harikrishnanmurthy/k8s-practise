@@ -1,0 +1,31 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: web-hpa
+spec:
+  # Point HPA at your deployment
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: spring-deployment
+
+  # Pod count boundaries
+  minReplicas: 2    # never scale below 2 (matches your current replica count)
+  maxReplicas: 6    # never scale above 6
+
+  metrics:
+    # Scale out when average CPU across all pods exceeds 50%
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 30
+
+    # Scale out when average memory across all pods exceeds 70%
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 30
